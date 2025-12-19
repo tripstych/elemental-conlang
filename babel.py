@@ -22,7 +22,7 @@ Lexicon values can be either:
 - dict (new format): {"word": "...", "composition": {...}, ...}
 - str  (legacy format): "..."
 """
-.-*/
+
 class ConlangTranslator:
     """English -> conlang translator using a WordNet-style keyed lexicon."""
 
