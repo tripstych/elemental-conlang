@@ -100,17 +100,6 @@ def process_word(word):
             if composition[key] < log_scale(max_sim):
                 composition[key] = log_scale(max_sim)
         
-        # Apply Bumps
-        if False:
-            if type == 'v':
-                composition['air'] = max(64, composition['air'] + bump)
-            if type == 'n':
-                composition['earth'] = max(64, composition['earth'] + bump)
-            if type == 'a':
-                composition['water'] = max(64, composition['water'] + bump)
-            if type == 'r':
-                composition['fire'] = max(64, composition['fire'] + bump)
-
         # 2. Save IMMEDIATELY inside the loop
         data = { 'spirit': closest, 'composition': composition, 'definition': defn}
         results[name] = data

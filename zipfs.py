@@ -3,8 +3,16 @@ from collections import Counter
 import numpy as np
 import json
 
-with open("translation", "r", encoding="utf-8", errors="replace") as f:
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--filename", default="translation", help="Input file name")
+args = parser.parse_args()
+
+with open(args.filename, "r", encoding="utf-8", errors="replace") as f:
     lexicon = f.readlines()
+
+
 tokes = []
 for lex in lexicon:
     for toke in lex.split(" "):
@@ -24,7 +32,7 @@ log_freqs = np.log10(frequencies)
 # 3. Plotting
 plt.figure(figsize=(10, 6))
 plt.scatter(log_ranks, log_freqs, alpha=0.5)
-plt.title("Zipf's Law Test: Nomad Monad Corpus")
+plt.title("Zipf's Law Test")
 plt.xlabel("Log(Rank)")
 plt.ylabel("Log(Frequency)")
 
