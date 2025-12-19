@@ -778,8 +778,14 @@ class LexiconGenerator:
             print(f"{k} -> {self.final_lexicon[k]['word']}")
 
     def save(self, filename='conlang_lexicon.json'):
+
         with open(filename, 'w', encoding='utf-8') as f:
             json.dump(self.final_lexicon, f, indent=2, ensure_ascii=False)
+        slim = {}
+        for key in self.final_lexicon:
+            slim[key] = self.final_lexicon[key]['word']
+        with open('slim_'+filename, 'w', encoding='utf-8') as f:
+            json.dump(slim, f, indent=2, ensure_ascii=False)
 
     def generate(self, output_filename):
         print("Generating Lexicon...")
@@ -804,6 +810,7 @@ if __name__ == '__main__':
     parser.add_argument("--input", default="elemental_source.json", help="Input file name")
     parser.add_argument("--output", default="elemental_dict.json", help="Input file name")
     args = parser.parse_args()
+    output_filename = args.output
     if not args:
         parser.print_help()
         exit()
