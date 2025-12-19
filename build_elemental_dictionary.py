@@ -1,6 +1,7 @@
 import warnings
 warnings.filterwarnings("ignore", category=UserWarning, message=".*Evaluating Doc.similarity based on empty vectors.*")
 
+import argparse
 import json
 import math
 
@@ -174,7 +175,13 @@ def main():
 
     print("*"*50)
     print("")
-    with open('elemental_dict.json', 'w', encoding='utf-8') as f:
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--output", default="elemental_source.json", help="Output file name")
+    args = parser.parse_args()
+    output_filename = args.output
+
+    with open(output_filename, 'w', encoding='utf-8') as f:
         json.dump(results, f, indent=2, ensure_ascii=False)
         print(len(results.keys()))
     

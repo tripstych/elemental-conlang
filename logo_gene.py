@@ -1,3 +1,4 @@
+import argparse
 import random
 import operator
 import json
@@ -5,14 +6,6 @@ import math
 import os
 import re
 
-
-# --- 1. STRICT RUNIC CONFIGURATION (No Gemination/Double Letters) ---
-
-# CHANGES:
-# 1. Removed doubled vowels (aa, ee, ii) -> Replaced with Diphthongs (ia, eo, io).
-#    (Runes do not double letters for length. 'aa' is strictly incorrect orthography).
-# 2. Removed 'll' in modifiers -> Replaced with 'lr'.
-# 3. Maintained 'ae', 'oe', 'ng', 'th' as they represent SINGLE distinct runes (Ash, Odal, Ingwaz, Thurisaz).
 
 onset_phones = {
     # Nouns: Heavy clusters (Kn- / Gn- / Wr-)
@@ -788,7 +781,7 @@ class LexiconGenerator:
         with open(filename, 'w', encoding='utf-8') as f:
             json.dump(self.final_lexicon, f, indent=2, ensure_ascii=False)
 
-    def generate(self):
+    def generate(self, output_filename):
         print("Generating Lexicon...")
         self.generate_base_lexicon()
 
@@ -802,13 +795,21 @@ class LexiconGenerator:
         self.resolve_homonyms()
 
         self.print_stats()
-        self.save()
+        self.save(output_filename)
         return self.final_lexicon
 
 
 if __name__ == '__main__':
-    with open('elemental_dict.json', 'r', encoding='utf-8') as f:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--input", default="elemental_source.json", help="Input file name")
+    parser.add_argument("--output", default="elemental_dict.json", help="Input file name")
+    args = parser.parse_args()
+    if not args:
+        parser.print_help()
+        exit()
+
+    with open(args.input, 'r', encoding='utf-8') as f:
         elemental_dict = json.load(f)
 
     generator = LexiconGenerator(elemental_dict)
-    generator.generate()
+    generator.generate(output_filename)
