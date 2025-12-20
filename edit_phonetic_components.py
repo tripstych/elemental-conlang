@@ -31,13 +31,12 @@ class PhoneticEditorTk:
     def _load_phonetic_data(self):
         """Load phonetic dictionary from JSON file"""
         try:
-            filename = f"{self.language_name}_phonetic_dictionary.json"
-            with open(filename, 'r', encoding='utf-8') as f:
+            with open('phonetic_dictionary.json', 'r', encoding='utf-8') as f:
                 data = json.load(f)
             print(f"Loaded phonetic dictionary with {len(data)} categories")
             return data
         except FileNotFoundError:
-            print(f"Error: {filename} not found")
+            print("Error: phonetic_dictionary.json not found")
             return {}
         except json.JSONDecodeError as e:
             print(f"Error parsing JSON: {e}")
