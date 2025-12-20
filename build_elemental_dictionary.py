@@ -1,15 +1,25 @@
 import warnings
 warnings.filterwarnings("ignore", category=UserWarning, message=".*Evaluating Doc.similarity based on empty vectors.*")
 
-import argparse
-import json
 import math
+import json
+import random
+import numpy as np
+import argparse
+from tqdm import tqdm
+import spacy
+from collections import Counter
+from itertools import combinations
+from wordfreq import zipf_frequency, top_n_list
+from gensim.models import Word2Vec
+from sklearn.metrics.pairwise import cosine_similarity
+import nltk
+from nltk.corpus import wordnet as wn
+from nltk.stem import WordNetLemmatizer
+from pattern.text.en import singularizer
 
 import en_core_web_lg
-from nltk.corpus import wordnet as wn
-
 nlp = en_core_web_lg.load(disable=["tagger", "parser", "ner", "lemmatizer", "attribute_ruler"])
-
 
 results = {}
 # 2. PHONETIC MAPPING (Base-4 Conlang)
@@ -40,6 +50,30 @@ anchors ={
         'Purification', 'Vitality', 'Destruction', 'Willpower'
     ]
 } 
+
+# Parse command line arguments for custom anchors file
+parser = argparse.ArgumentParser(description='Build elemental dictionary with optional custom anchors')
+parser.add_argument('--anchor', type=str, help='JSON file containing custom anchors dictionary')
+parser.add_argument('--output', default="elemental_source.json", help="Output file name")
+args, unknown = parser.parse_known_args()
+
+# Load custom anchors if provided, otherwise use default
+if args.anchor:
+    try:
+        with open(args.anchor, 'r', encoding='utf-8') as f:
+            custom_anchors = json.load(f)
+        # Validate that it's a proper anchors dictionary
+        if isinstance(custom_anchors, dict) and all(isinstance(v, list) for v in custom_anchors.values()):
+            anchors = custom_anchors
+            print(f"Loaded custom anchors from {args.anchor}")
+        else:
+            print(f"Invalid anchors format in {args.anchor}, using default anchors")
+    except FileNotFoundError:
+        print(f"Anchor file {args.anchor} not found, using default anchors")
+    except json.JSONDecodeError as e:
+        print(f"Error parsing anchors file {args.anchor}: {e}, using default anchors")
+else:
+    print("Using default anchors")
 
 ANCHOR_DOCS = {k: list(nlp.pipe(v, batch_size=64)) for k, v in anchors.items()}
 
@@ -176,12 +210,7 @@ def main():
     print("*"*50)
     print("")
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--output", default="elemental_source.json", help="Output file name")
-    args = parser.parse_args()
-    output_filename = args.output
-
-    with open(output_filename, 'w', encoding='utf-8') as f:
+    with open(args.output, 'w', encoding='utf-8') as f:
         json.dump(results, f, indent=2, ensure_ascii=False)
         print(len(results.keys()))
     
