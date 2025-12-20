@@ -6,4 +6,5 @@ __pycache__/yoda.cpython-312.pyc
 *.txt
 *.pyc
 !words.txt
+!requirements.txt
 !elemental_source.json
