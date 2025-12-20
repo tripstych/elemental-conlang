@@ -226,6 +226,10 @@ class MainTkApp:
             foreground='gray'
         )
         self.status_label.pack(pady=(20, 0))
+        
+        # Initialize input defaults and bind language name changes (after all widgets are created)
+        self._update_input_defaults()
+        self.language_name_var.trace('w', lambda *args: self._update_input_defaults())
     
     def _browse_file(self, var, title, filetypes):
         """Browse for a file and update the given StringVar"""
@@ -258,7 +262,7 @@ class MainTkApp:
         self.root.update()
         try:
             # Launch edit_phonetic.py in a new process
-            subprocess.Popen([sys.executable, 'edit_phonetic.py'])
+            subprocess.Popen([sys.executable, 'edit_phonetic.py', '--language', self.language_name_var.get().strip()])
             self.root.after(1000, lambda: self._update_status("Phonetics Editor launched"))
         except Exception as e:
             messagebox.showerror("Error", f"Failed to launch Phonetics Editor:\n{str(e)}")
@@ -271,30 +275,14 @@ class MainTkApp:
             messagebox.showerror("Error", "Please enter a language name first!")
             return
         
-        # Get file paths from input fields (optional overrides)
+        # Get file paths from input fields
         anchors_file = self.anchors_file_var.get().strip()
         output_file = self.elemental_output_var.get().strip()
         
-        # Use file dialog if output file not provided in input field
+        # Validate required fields
         if not output_file:
-            suggested_filename = f"{language_name}_elemental_data.json"
-            output_file = filedialog.asksaveasfilename(
-                title="Save Elemental Dictionary As",
-                initialfile=suggested_filename,
-                defaultextension=".json",
-                filetypes=[("JSON files", "*.json"), ("All files", "*.*")]
-            )
-            
-            if not output_file:  # User cancelled
-                self.status_label.config(text="Ready to start building your conlang!")
-                return
-        
-        # Check for anchors file (use input field if provided, otherwise check for default)
-        if not anchors_file:
-            # Check for custom anchors file
-            anchors_file = f"{language_name.lower()}_anchors.json"
-            if not os.path.exists(anchors_file):
-                anchors_file = None  # Use default anchors
+            messagebox.showerror("Error", "Please specify an output file!")
+            return
         
         self.status_label.config(text="Started building, this may take a while..")
         self.root.update()
@@ -318,7 +306,29 @@ class MainTkApp:
         except Exception as e:
             messagebox.showerror("Error", f"Failed to build elemental dictionary:\n{str(e)}")
             self.status_label.config(text="Ready to start building your conlang!")
-    
+
+    def _update_input_defaults(self):
+        """Update input field defaults based on language name"""
+        language_name = self.language_name_var.get().strip()
+        if language_name:
+            # Build Elemental defaults
+            self.anchors_file_var.set(f"{language_name}_anchors.json")
+            self.elemental_output_var.set(f"{language_name}_elemental_data.json")
+            
+            # Build Words defaults
+            self.words_elemental_var.set(f"{language_name}_elemental_data.json")
+            self.words_phonetic_var.set(f"{language_name}_phonetic_dictionary.json")
+            self.words_wordlist_var.set(f"{language_name}_words.txt")
+            self.words_output_var.set(f"{language_name}_words_data.json")
+        else:
+            # Clear defaults if no language name
+            self.anchors_file_var.set("")
+            self.elemental_output_var.set("")
+            self.words_elemental_var.set("")
+            self.words_phonetic_var.set("")
+            self.words_wordlist_var.set("")
+            self.words_output_var.set("")
+
     def launch_build_words(self, instance):
         """Launch the word generator"""
         language_name = self.language_name_var.get().strip()
@@ -326,38 +336,19 @@ class MainTkApp:
             messagebox.showerror("Error", "Please enter a language name first!")
             return
         
-        # Get file paths from input fields (optional overrides)
+        # Get file paths from input fields
         elemental_file = self.words_elemental_var.get().strip()
         phonetic_file = self.words_phonetic_var.get().strip()
         wordlist_file = self.words_wordlist_var.get().strip()
         output_file = self.words_output_var.get().strip()
         
-        # Use file dialogs if files not provided in input fields
+        # Validate required fields
         if not elemental_file:
-            expected_filename = f"{language_name}_elemental_data.json"
-            elemental_file = filedialog.askopenfilename(
-                title="Select Elemental Dictionary File",
-                initialfile=expected_filename,
-                defaultextension=".json",
-                filetypes=[("JSON files", "*.json"), ("All files", "*.*")]
-            )
-            
-            if not elemental_file:  # User cancelled
-                self.status_label.config(text="Ready to start building your conlang!")
-                return
-        
+            messagebox.showerror("Error", "Please specify an elemental dictionary file!")
+            return
         if not output_file:
-            suggested_filename = f"{language_name}_words_data.json"
-            output_file = filedialog.asksaveasfilename(
-                title="Save Word Dictionary As",
-                initialfile=suggested_filename,
-                defaultextension=".json",
-                filetypes=[("JSON files", "*.json"), ("All files", "*.*")]
-            )
-            
-            if not output_file:  # User cancelled
-                self.status_label.config(text="Ready to start building your conlang!")
-                return
+            messagebox.showerror("Error", "Please specify an output file!")
+            return
         
         self.status_label.config(text="Building Word Dictionary...")
         self.root.update()
@@ -368,7 +359,7 @@ class MainTkApp:
             f.write("0")
             f.close()
             # Build command based on available options
-            cmd = [sys.executable, 'omega_alpha.py']
+            cmd = [sys.executable, 'build_dictionary.py']
             
             # Add elemental dict (always required)
             cmd.extend(['--elemental-dict', elemental_file])

@@ -4,14 +4,17 @@ Phonetic Editor - Tkinter version for better key-value editing
 Creates a clean interface for editing phonetic dictionary JSON with proper tables
 """
 
+import time
+import argparse
 import json
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 import os
-
+import sys
 
 class PhoneticEditorTk:
-    def __init__(self, root):
+    def __init__(self, root, language_name):
+        self.language_name = language_name
         self.root = root
         self.root.title("Phonetic Dictionary Editor")
         self.root.geometry("800x600")
@@ -465,7 +468,7 @@ class PhoneticEditorTk:
             file_path = filedialog.asksaveasfilename(
                 defaultextension=".json",
                 filetypes=[("JSON files", "*.json"), ("All files", "*.*")],
-                initialfile="phonetic_dictionary.json"
+                initialfile=self.language_name+"_phonetic_dictionary.json"
             )
             
             if file_path:
@@ -483,8 +486,13 @@ class PhoneticEditorTk:
 
 
 def main():
+    parser = argparse.ArgumentParser(description='Phonetic Editor')
+    parser.add_argument('--language', help='Name of language to edit', default="default")
+    args = parser.parse_args()
+    language_name = args.language
     root = tk.Tk()
-    app = PhoneticEditorTk(root)
+    app = PhoneticEditorTk(root, language_name)
+    root.title(f"Conlang Development Studio: {language_name}")
     root.mainloop()
 
 

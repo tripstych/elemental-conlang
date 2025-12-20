@@ -335,6 +335,11 @@ class LexiconGenerator:
 
     def save(self):
         print(f"Saving {len(self.final_lexicon)} words to {self.output_path}...")
+        dict = {}
+        for key in self.final_lexicon:
+            dict[key] = self.final_lexicon[key]['word']
+        with open(self.output_path.replace('.json','.txt'), 'w', encoding='utf-8') as f:
+            json.dump(dict, f, indent=2, ensure_ascii=False)
         with open(self.output_path, 'w', encoding='utf-8') as f:
             json.dump(self.final_lexicon, f, indent=2, ensure_ascii=False)
 
