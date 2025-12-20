@@ -256,7 +256,7 @@ class MainTkApp:
         self.root.update()
         try:
             # Launch edit_elementals.py in a new process
-            subprocess.Popen([sys.executable, 'edit_elementals.py'])
+            subprocess.Popen([sys.executable, 'edit_elementals.py','--language', self.language_name_var.get().strip()])
             self.root.after(1000, lambda: self._update_status("Elements Editor launched"))
         except Exception as e:
             messagebox.showerror("Error", f"Failed to launch Elements Editor:\n{str(e)}")
@@ -301,11 +301,13 @@ class MainTkApp:
             if anchors_file and os.path.exists(anchors_file):
                 # Use custom anchors
                 cmd = [sys.executable, 'build_elemental_dictionary.py', 
+                       '--language', self.language_name_var.get().strip(), 
                        '--anchor', anchors_file, 
                        '--output', output_file]
             else:
                 # Use default anchors
                 cmd = [sys.executable, 'build_elemental_dictionary.py', 
+                       '--anchor', anchors_file, 
                        '--output', output_file]
             
             subprocess.Popen(cmd)

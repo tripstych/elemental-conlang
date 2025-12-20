@@ -8,10 +8,13 @@ import json
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 import os
+import argparse
+import sys
 
 
 class ElementalsEditorTk:
-    def __init__(self, root):
+    def __init__(self, root, language_name):
+        self.language_name = language_name
         self.root = root
         self.root.title("Elemental Anchors Editor")
         self.root.geometry("800x600")
@@ -28,7 +31,15 @@ class ElementalsEditorTk:
     def _load_anchors_data(self):
         """Load elemental anchors dictionary from JSON file"""
         try:
-            # Try to load from a default anchors JSON file first
+            # Try to load from language-specific anchors file first
+            anchors_file = f"{self.language_name}_anchors.json"
+            if os.path.exists(anchors_file):
+                with open(anchors_file, 'r', encoding='utf-8') as f:
+                    anchors_dict = json.load(f)
+                print(f"Loaded anchors dictionary from {anchors_file}")
+                return anchors_dict
+            
+            # Try to load from a default anchors JSON file
             default_file = 'default_anchors.json'
             if os.path.exists(default_file):
                 with open(default_file, 'r', encoding='utf-8') as f:
@@ -213,7 +224,7 @@ class ElementalsEditorTk:
             file_path = filedialog.asksaveasfilename(
                 defaultextension=".json",
                 filetypes=[("JSON files", "*.json"), ("All files", "*.*")],
-                initialfile="custom_anchors.json"
+                initialfile=f"{self.language_name}_anchors.json"
             )
             
             if file_path:
@@ -231,8 +242,14 @@ class ElementalsEditorTk:
 
 
 def main():
+    parser = argparse.ArgumentParser(description='Elemental Anchors Editor')
+    parser.add_argument('--language', help='Name of language to edit', default="default")
+    args = parser.parse_args()
+    language_name = args.language
+    
     root = tk.Tk()
-    app = ElementalsEditorTk(root)
+    app = ElementalsEditorTk(root, language_name)
+    root.title(f"Elemental Anchors Editor: {language_name}")
     root.mainloop()
 
 
