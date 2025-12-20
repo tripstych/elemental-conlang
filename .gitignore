@@ -1,6 +1,7 @@
 lexicon_no_homonyms.json
 translation
 __pycache__/yoda.cpython-312.pyc
+*~
 .*
 *.json
 *.txt

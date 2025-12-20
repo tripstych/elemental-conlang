@@ -16,7 +16,6 @@ from sklearn.metrics.pairwise import cosine_similarity
 import nltk
 from nltk.corpus import wordnet as wn
 from nltk.stem import WordNetLemmatizer
-from pattern.text.en import singularizer
 
 import en_core_web_lg
 nlp = en_core_web_lg.load(disable=["tagger", "parser", "ner", "lemmatizer", "attribute_ruler"])
@@ -55,6 +54,7 @@ anchors ={
 parser = argparse.ArgumentParser(description='Build elemental dictionary with optional custom anchors')
 parser.add_argument('--anchor', type=str, help='JSON file containing custom anchors dictionary')
 parser.add_argument('--output', default="elemental_source.json", help="Output file name")
+parser.add_argument('--words', default="words.txt", help="Spelling dictionary ")
 args, unknown = parser.parse_known_args()
 
 # Load custom anchors if provided, otherwise use default
@@ -195,20 +195,21 @@ def _process_word(word):
 def main():
     # Read words from file
     try:
-        with open('words.txt', 'r') as f:
+        with open(args.words, 'r') as f:
             words = [line.strip() for line in f if line.strip()]
     except FileNotFoundError:
-        print("Error: words.txt not found in the current directory")
+        print("Error: words.txt not found in the current directory",end="\r")
         return
     
     # Process each word
     total_words = len(words)
-    print(f"Processing {total_words} words...")
+    print(f"Processing {total_words} words...", end="\r")
+    ft = open(".tmp.counter","w")
     for i, word in enumerate(words, 1):
+        ft.write(f"{i}\n")
+        ft.flush()
         process_word(word)
-
-    print("*"*50)
-    print("")
+    ft.write("done")
 
     with open(args.output, 'w', encoding='utf-8') as f:
         json.dump(results, f, indent=2, ensure_ascii=False)

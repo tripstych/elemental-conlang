@@ -13,8 +13,9 @@ gensim>=4.3.0
 # Text processing utilities
 num2words>=0.5.12
 wordfreq>=4.2.0
-pattern>=3.6
 pyspellchecker>=0.7.0
 
 # GUI framework
 kivy>=2.2.0
+
+scikit-learn >=1.8
