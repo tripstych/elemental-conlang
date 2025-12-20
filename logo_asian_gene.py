@@ -189,77 +189,23 @@ def get_composition(doc):
 
 def main():
     try:
-        with open('words.txt', 'r') as f:
-            words = list(dict.fromkeys([w.strip() for w in f if w.strip()]))
-    except:
-        print("words.txt not found")
-        return
-
-    print(f"Processing {len(words)} words...")
-    allocator = WordAllocator()
-    entries = []
-
-    for w in words:
-        synsets = wn.synsets(w)
-        if not synsets:
-            entries.append({'type': 'fb', 'word': w, 'text': w})
-        else:
-            syn = synsets[0]
-            entries.append({
-                'type': 'wn', 
-                'word': w, 
-                'text': f"{w} {syn.definition()}",
-                'pos': syn.name().split('.')[1],
-                'definition': syn.definition(),
-                'key': syn.name() # Use the specific WordNet key (e.g. on.r.02)
-            })
-
-    print("Vectorizing...")
-    texts = [e['text'] for e in entries]
-    docs = list(nlp.pipe(texts, batch_size=256))
-    results = {}
-    
-    print("Generating & Allocating...")
-    for i, (entry, doc) in enumerate(zip(entries, docs)):
+        with open('elemental_dict.json', 'r', encoding='utf-8') as f:
+            results = json.load(f)
+        print(f"Loaded {len(results)} entries from 'elemental_dict.json'.")
         
-        if not doc.has_vector or doc.vector_norm == 0:
-            spirit, comp = 'water', {'wood': 20, 'fire': 20, 'earth': 20, 'metal': 20, 'water': 60}
-        else:
-            spirit, comp = get_composition(doc)
-
-        sorted_el = sorted(comp.items(), key=lambda x: x[1], reverse=True)
-        primary = sorted_el[0][0]
-        secondary = sorted_el[1][0] if len(sorted_el) > 1 else primary
+        # Display some sample entries
+        print("\nSample entries:")
+        for i, (key, value) in enumerate(list(results.items())[:5]):
+            print(f"  {key}: {value['word']} - {value['definition'][:50]}...")
         
-        if entry['type'] == 'fb':
-            spacy_pos = doc[0].pos_ if len(doc)>0 else 'X'
-            phon_key = map_pos_to_key(spacy_pos, 'spacy')
-            entry_key = f"{entry['word']}.{phon_key}.00" # Fallback key format
-            definition = f"[{spacy_pos}] {entry['word']}"
-        else:
-            phon_key = map_pos_to_key(entry['pos'], 'wordnet')
-            entry_key = entry['key']
-            definition = entry['definition']
-
-        final_word = allocator.get_word(primary, secondary, phon_key)
+        return results
         
-        # SAVE FULL FORMAT
-        results[entry_key] = {
-            'spirit': spirit,
-            'composition': comp,
-            'definition': definition,
-            'word': final_word
-        }
-        
-        if i % 2000 == 0:
-            print(f"  Processed {i} words...", end="\r")
-
-    print(f"\nCompleted {len(results)} words.")
-    
-    with open('lexicon_final_full.json', 'w', encoding='utf-8') as f:
-        json.dump(results, f, indent=2, ensure_ascii=False)
-        
-    print("Saved to 'lexicon_final_full.json'.")
+    except FileNotFoundError:
+        print("elemental_dict.json not found. Please ensure the generated JSON file exists.")
+        return None
+    except json.JSONDecodeError:
+        print("Error parsing elemental_dict.json. Please check the file format.")
+        return None
 
 if __name__ == "__main__":
     main()

@@ -1,4 +1,3 @@
-import argparse
 import random
 import operator
 import json
@@ -7,7 +6,29 @@ import os
 import re
 
 
-onset_phones = {
+# --- 1. LOAD PHONETIC CONFIGURATION FROM JSON ---
+
+def load_phonetic_config():
+    """Load phonetic configuration from phonetic_dictionary.json"""
+    try:
+        with open('phonetic_dictionary.json', 'r', encoding='utf-8') as f:
+            config = json.load(f)
+        return (
+            config.get('onset_phones', {}),
+            config.get('nucleus_vowels', {}),
+            config.get('nucleus_modifiers', {}),
+            config.get('coda', {})
+        )
+    except FileNotFoundError:
+        print("Warning: phonetic_dictionary.json not found, using default configurations")
+        return get_default_config()
+    except json.JSONDecodeError:
+        print("Warning: Error parsing phonetic_dictionary.json, using default configurations")
+        return get_default_config()
+
+def get_default_config():
+    """Default hardcoded configuration as fallback"""
+    default_onset_phones = {
     # Nouns: Heavy clusters (Kn- / Gn- / Wr-)
     'n': [
         'd', 'z', 'n', 'l', 'r',             
@@ -43,52 +64,48 @@ onset_phones = {
     'o': ['h', 'w'], 
 }
 
-nucleus_vowels = {
-    # Fire: Bright/High
-    # Replaced 'ii' (Double) with 'io' (Diphthong)
-    'fire':  ['a', 'ay', 'ah', 'oa', 'ya', 'ia', 'ua'],   
+    default_nucleus_vowels = {
+        # Fire: Bright/High
+        # Replaced 'ii' (Double) with 'io' (Diphthong)
+        'fire':  ['a', 'ay', 'ah', 'oa', 'ya', 'ia', 'ua'],   
     
-    # Air: Mid
-    # Replaced 'ee' (Double) with 'eo' (Valid Runic Diphthong)
-    'air':   ['e', 'eo', 'ei', 'ae', 'ee', 'ey'],  
+        # Air: Mid
+        # Replaced 'ee' (Double) with 'eo' (Valid Runic Diphthong)
+        'air':   ['e', 'eo', 'ei', 'ae', 'ee', 'ey'],  
     
-    # Earth: Low/Back
-    # Replaced 'aa' (Double) with 'ia' (Diphthong)
-    'earth': ['i', 'ia', 'iu', 'io', 'iy'],  
+        # Earth: Low/Back
+        # Replaced 'aa' (Double) with 'ia' (Diphthong)
+        'earth': ['i', 'ia', 'iu', 'io', 'iy'],  
     
-    # Water: Round/Deep
-    # 'uo' and 'ou' are valid diphthongs, not doubles
-    'water': ['u', 'ui', 'uu', 'ua', 'ue']    
-}
+        # Water: Round/Deep
+        # 'uo' and 'ou' are valid diphthongs, not doubles
+        'water': ['u', 'ui', 'uu', 'ua', 'ue']    
+    }
 
-nucleus_modifiers = {
-    'n': ['w', 'u', 'r', 'l'], 
-    'v': ['j', 'i', 'n'],      
-    'a': ['h', 'w'],           
-    'e': ['h'],
+    default_nucleus_modifiers = {
+        'n': ['w', 'u', 'r', 'l'], 
+        'v': ['j', 'i', 'n'],      
+        'a': ['h', 'w'],           
+        'e': ['h'],
+        'r': ['l', 'r', 's'],
+        's': ['z'],
+        'k': ['n', 'ng'],
+        'i': ['w'],
+        'd': ['j'],
+        'o': ['h'],
+    }
     
-    # Replaced 'll' (Double) with 'lr' (Liquid Cluster)
-    'r': ['l', 'r', 's'],
+    default_coda = {
+        'earth': ['rb', 'rc', 'rf', 'rg', 'rm', 'rn', 'rp', 'rs', 'rst'], 
+        'air':   ['ft', 'ht', 'lt', 'nt', 'rt', 'st'],
+        'fire':  ['ks', 'k', 'z', 'sk', 'st'],
+        'water': ['m', 'l', 'n', 'ng', 'rm', 'rn', 'r'] 
+    }
     
-    's': ['z'],
-    'k': ['n', 'ng'],
-    'i': ['w'],
-    'd': ['j'],
-    'o': ['h'],
-}
+    return default_onset_phones, default_nucleus_vowels, default_nucleus_modifiers, default_coda
 
-coda = {
-    'earth': [
-         'rb', 'rc', 'rf', 'rg', 'rm', 'rn', 'rp,' 'rs' 'rst', 
-    ], 
-    'air':   [ 
-        'ft', 'ht', 'lt', 'nt', 'rt','st'
-    ],
-    'fire':  [
-        'ks', 'k', 'z', 'sk', 'st']
-    , 
-    'water': ['m', 'l', 'n', 'ng', 'rm', 'rn'] 
-}
+# Load phonetic configuration from JSON file
+onset_phones, nucleus_vowels, nucleus_modifiers, coda = load_phonetic_config()
 # --- 2. CORE GENERATOR FUNCTIONS ---
 
 def to_rune(text):
@@ -410,8 +427,11 @@ class LexiconGenerator:
     3) Resolve remaining homonyms (composition-aware).
     """
 
-    def __init__(self, elemental_dict):
+    def __init__(self, elemental_dict, phonetic_dict_path='phonetic_dictionary.json', wordlist_path='words.txt', output_path='conlang_lexicon.json'):
         self.elemental_dict = elemental_dict
+        self.phonetic_dict_path = phonetic_dict_path
+        self.wordlist_path = wordlist_path
+        self.output_path = output_path
 
         self.stem_index = {}
         for key in self.elemental_dict:
@@ -566,7 +586,9 @@ class LexiconGenerator:
         existing_stems.add(stem)
         return True
 
-    def fill_missing_from_wordlist(self, filename='words.txt'):
+    def fill_missing_from_wordlist(self, filename=None):
+        if filename is None:
+            filename = self.wordlist_path
         base_dir = os.path.dirname(os.path.abspath(__file__))
         filename = os.path.join(base_dir, filename)
         if not os.path.exists(filename):
@@ -644,7 +666,9 @@ class LexiconGenerator:
 
                 self._add_filler_base_entry(stem, existing_stems, pos='n')
 
-    def optimize_short_word_translations(self, filename='words.txt'):
+    def optimize_short_word_translations(self, filename=None):
+        if filename is None:
+            filename = self.wordlist_path
         base_dir = os.path.dirname(os.path.abspath(__file__))
         filename = os.path.join(base_dir, filename)
         if not os.path.exists(filename):
@@ -764,6 +788,7 @@ class LexiconGenerator:
         resolve_remaining_homonyms(self.final_lexicon, self.reverse_lookup)
 
     def print_stats(self):
+        print("-"*20)
         print(f"Total Definitions: {len(self.elemental_dict)}")
         unique_word_pairs = {
             (entry.get('word'), composition_signature(entry.get('composition', {})))
@@ -771,52 +796,80 @@ class LexiconGenerator:
             if entry.get('word')
         }
         print(f"Total Unique Words: {len(unique_word_pairs)}")
-
+        print("-"*20)
         compounds = [k for k in self.final_lexicon if '_' in k]
         print(f"\nSample Compounds ({len(compounds)} found):")
         for k in compounds[:15]:
             print(f"{k} -> {self.final_lexicon[k]['word']}")
+        print("-"*20)
 
-    def save(self, filename='conlang_lexicon.json'):
-
+    def save(self, filename=None):
+        if filename is None:
+            filename = self.output_path
+        simple = {}
+        txt_filename = filename.replace(".json",".txt")
+        print(f"Saving base dictionary {txt_filename}")
+        with open(txt_filename, 'w', encoding='utf-8') as f:
+            for key in self.final_lexicon:
+                f.write(f"{key}:{self.final_lexicon[key]['word']}")
+        print(f"Saving data dictionary {filename}")
         with open(filename, 'w', encoding='utf-8') as f:
             json.dump(self.final_lexicon, f, indent=2, ensure_ascii=False)
-        slim = {}
-        for key in self.final_lexicon:
-            slim[key] = self.final_lexicon[key]['word']
-        with open('slim_'+filename, 'w', encoding='utf-8') as f:
-            json.dump(slim, f, indent=2, ensure_ascii=False)
 
-    def generate(self, output_filename):
+    def generate(self):
         print("Generating Lexicon...")
         self.generate_base_lexicon()
 
         print("Generating Compounds...")
         self.generate_compounds()
 
-        self.fill_missing_from_wordlist('words.txt')
+        self.fill_missing_from_wordlist()
 
-        self.optimize_short_word_translations('words.txt')
+        self.optimize_short_word_translations()
 
         self.resolve_homonyms()
 
         self.print_stats()
-        self.save(output_filename)
+        self.save()
         return self.final_lexicon
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--input", default="elemental_source.json", help="Input file name")
-    parser.add_argument("--output", default="elemental_dict.json", help="Input file name")
+    import argparse
+    
+    parser = argparse.ArgumentParser(description='Generate a conlang lexicon from elemental dictionary')
+    parser.add_argument('--elemental-dict', default='elemental_dict.json', help='Path to elemental dictionary JSON file')
+    parser.add_argument('--phonetic-dict', default='phonetic_dictionary.json', help='Path to phonetic dictionary JSON file')
+    parser.add_argument('--wordlist', default='words.txt', help='Path to wordlist file')
+    parser.add_argument('--output', default='conlang_lexicon.json', help='Output file for generated lexicon')
+    
     args = parser.parse_args()
-    output_filename = args.output
-    if not args:
-        parser.print_help()
-        exit()
+    
+    # Reload phonetic configuration with the specified path
+    def load_phonetic_config_with_path(phonetic_dict_path):
+        try:
+            print(f"Loading {phonetic_dict_path} phonetic data")
+            with open(phonetic_dict_path, 'r', encoding='utf-8') as f:
+                config = json.load(f)
+            return (
+                config.get('onset_phones', {}),
+                config.get('nucleus_vowels', {}),
+                config.get('nucleus_modifiers', {}),
+                config.get('coda', {})
+            )
+        except FileNotFoundError:
+            print(f"Warning: {phonetic_dict_path} not found, using default configurations")
+            return get_default_config()
+        except json.JSONDecodeError:
+            print(f"Warning: Error parsing {phonetic_dict_path}, using default configurations")
+            return get_default_config()
 
-    with open(args.input, 'r', encoding='utf-8') as f:
+    onset_phones, nucleus_vowels, nucleus_modifiers, coda = load_phonetic_config_with_path(args.phonetic_dict)
+
+    # Load elemental dictionary
+    print(f"Reading {args.elemental_dict} Elemental 'Occult' Dictionary")
+    with open(args.elemental_dict, 'r', encoding='utf-8') as f:
         elemental_dict = json.load(f)
 
-    generator = LexiconGenerator(elemental_dict)
-    generator.generate(output_filename)
+    generator = LexiconGenerator(elemental_dict, phonetic_dict_path=args.phonetic_dict, wordlist_path=args.wordlist, output_path=args.output)
+    generator.generate()

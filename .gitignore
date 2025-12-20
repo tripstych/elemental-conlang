@@ -1,4 +1,9 @@
-__pycache__/yoda.cpython-312.pyc
-final_asian_lexicon_10key.json
 lexicon_no_homonyms.json
 translation
+__pycache__/yoda.cpython-312.pyc
+.*
+*.json
+*.txt
+*.pyc
+!words.txt
+!elemental_source.json
