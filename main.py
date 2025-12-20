@@ -29,8 +29,9 @@ class MainTkApp:
         # Create main interface
         self._create_main_interface()
     
-    def start_monitoring_thread(self):
-        """Create and start a new thread for monitoring the counter file"""
+    def start_monitoring_thread(self, output_file=None):
+        """Start the monitoring thread for build progress"""
+        self.output_file = output_file  # Store output file for completion message
         threading.Thread(target=self.monitor_counter_file, daemon=True).start()
     
     def monitor_counter_file(self):
@@ -47,8 +48,13 @@ class MainTkApp:
                     if lines:
                         last_line = lines[-1].strip()
                         if last_line == "done":
-                            # Put completion message in queue
-                            self.queue.put("Completed!")
+                            # Put completion message in queue with file paths
+                            if hasattr(self, 'output_file') and self.output_file:
+                                txt_file = self.output_file.replace('.json', '.txt')
+                                completion_msg = f"Built dictionary files {self.output_file} and {txt_file}"
+                            else:
+                                completion_msg = "Completed!"
+                            self.queue.put(completion_msg)
                             break
                         else:
                             # Put progress update (latest line number) in queue
@@ -375,8 +381,14 @@ class MainTkApp:
             # Add output file
             cmd.extend(['--output', output_file])
             
-            subprocess.Popen(cmd)
-            self.root.after(1000, lambda: self._update_status(f"Building word dictionary for {language_name}..."))
+            # Run process and wait for completion
+            process = subprocess.Popen(cmd)
+            process.wait()  # Wait for process to complete
+            
+            # Show completion notice
+            txt_file = output_file.replace('.json', '.txt')
+            messagebox.showinfo("Build Complete", f"Built dictionary files {output_file} and {txt_file}")
+            self.status_label.config(text=f"Built dictionary files {output_file} and {txt_file}")
         except Exception as e:
             messagebox.showerror("Error", f"Failed to build word dictionary:\n{str(e)}")
             self.status_label.config(text="Ready to start building your conlang!")
