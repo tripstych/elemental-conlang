@@ -114,6 +114,17 @@ Launch the main GUI:
 python main.py
 ```
 
+### Screenshots
+
+**Main Application Interface**
+![Main App](screenshots/MainApp.png)
+
+**Elements Editor**
+![Elements Editor](screenshots/ElementsEditor.png)
+
+**Phonetic Rules Editor**
+![Phonetic Rules Editor](screenshots/PhoneticRulesEditor.png)
+
 Or run specific editors:
 ```bash
 python edit_phonetic.py      # Edit phonetic dictionary
