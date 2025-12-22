@@ -1,3 +1,7 @@
+# I'm refactoring this whole thing to be more flexible & modular - so Modulex will be replacing this - 
+# warning: there's a known bug with the data flags, it's ignoring the output flag ATM
+
+
 # Elemental Conlang Project
 
 A comprehensive constructed language toolkit that analyzes words through elemental associations and generates translation dictionaries.
