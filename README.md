@@ -1,4 +1,5 @@
-Check out it's superior, far more flexible, predecessor,  (Globlocks)[https://github.com/tripstych/glotblocks]
+Check out it's superior, far more flexible, predecessor,  
+(Glotblocks)[https://github.com/tripstych/glotblocks]
 
 
 # Elemental Conlang Project
