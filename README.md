@@ -1,5 +1,5 @@
 Check out it's superior, far more flexible, predecessor,  
-(Glotblocks)[https://github.com/tripstych/glotblocks]
+https://github.com/tripstych/glotblocks
 
 
 # Elemental Conlang Project
