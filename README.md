@@ -1,5 +1,4 @@
-# I'm refactoring this whole thing to be more flexible & modular - so Modulex will be replacing this - 
-# warning: there's a known bug with the data flags, it's ignoring the output flag ATM
+Check out it's superior, far more flexible, predecessor,  (Globlocks)[https://github.com/tripstych/glotblocks]
 
 
 # Elemental Conlang Project
